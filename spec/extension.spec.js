@@ -1,7 +1,6 @@
 /*global MediumEditor, describe, it, expect, spyOn,
-         afterEach, beforeEach, selectElementContents,
-         jasmine, fireEvent, tearDown, console,
-         selectElementContentsAndFire */
+    afterEach, beforeEach, jasmine, tearDown,
+    selectElementContentsAndFire */
 
 describe('Extensions TestCase', function () {
     'use strict';
@@ -44,8 +43,8 @@ describe('Extensions TestCase', function () {
                     }
                 });
 
-            Extension.prototype.aMethod = function (param) {
-
+            Extension.prototype.aMethod = function () {
+                // just a stub function
             };
 
             spyOn(ext1, 'aMethod');
@@ -83,7 +82,7 @@ describe('Extensions TestCase', function () {
 
             expect(ext1.me instanceof MediumEditor).toBeTruthy();
             expect(ext2.me instanceof MediumEditor).toBeTruthy();
-            editor.deactivate();
+            editor.destroy();
         });
     });
 
@@ -104,7 +103,7 @@ describe('Extensions TestCase', function () {
                 }
             },
             ExtensionWithNoButton = function () {
-                this.init = function (me) {};
+                this.init = function () {};
             };
 
         it('should include extensions button into toolbar', function () {
@@ -216,7 +215,7 @@ describe('Extensions TestCase', function () {
 
             expect(extOne.name).toBe('one');
             expect(extTwo.name).toBe('two');
-            editor.deactivate();
+            editor.destroy();
         });
     });
 });

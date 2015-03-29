@@ -1,3 +1,35 @@
+4.0.3 / 2015-03-27
+==================
+* Introduce 'removeFormat' button, for removing formatting from selection
+* Fix issues with focus/blur when using standardizeSelectionStart option
+
+
+4.0.2 / 2015-03-26
+==================
+* Fix bug causing toolbar to disappaer on click in safari (rollback fix from 4.0.1)
+* Break up anchor form extension logic into more overrideable parts
+
+
+4.0.1 / 2015-03-24
+==================
+* Fix issue with dragged in image sizes
+* Fix issues with focus/blur when using standardizeSelectionStart option
+
+
+4.0.0 / 2015-03-23
+==================
+* Introduced custom events (consumable externally)
+* Reduce API surface area
+  * Deprecated activate & deactivated. Exposed setup and destroy as replacements
+  * Updated documentation to reflect API changes
+* HTML standardization around list items
+* Fixed throttling
+* Added superscript & subscript css
+* Added better paste cleaning for Microsoft Word
+* Convert anchor preview into overrideable extension
+* Added disableAnchorPreview option
+
+
 3.0.9 / 2015-03-10
 ==================
 * Extract toolbar

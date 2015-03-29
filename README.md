@@ -100,10 +100,11 @@ var elements = document.querySelectorAll('.editable'),
 * __updateOnEmptySelection__: update the state of the toolbar buttons even when the selection is collapse (there is no selection, just a cursor). Default: false
 
 ### Anchor form options
-* __anchorButton__: enables/disables adding class __anchorButtonClass__ to anchor tags. Default: false
+* __anchorButton__: enables/disables displaying a checkbox for whether the user wants the link to be displayed as a "button". If checkbox is checked, the created link will have __anchorButtonClass__ added to the class list. Default: false
 * __anchorButtonClass__: class to add to anchor tags, when __anchorButton__ is set to true. Default: btn
+* __anchorTarget__: enables/disables displaying a "Open in new window" checkbox, which when checked changes the `target` attribute of the created link. Default: false
+* __anchorInputCheckboxLabel__: text to be shown in the checkbox enabled via the __anchorTarget__ option. Default: _Open in new window_
 * __anchorInputPlaceholder__: text to be shown as placeholder of the anchor input. Default: _Paste or type a link_
-* __anchorInputCheckboxLabel__: text to be shown for the anchor new window target. Default: _Open in new window_
 * __anchorPreviewHideDelay__: time in milliseconds to show the anchor tag preview after the mouse has left the anchor tag. Default: 500
 * __checkLinkFormat__: enables/disables check for common URL protocols on anchor links. Default: false
 * __targetBlank__: enables/disables target="\_blank" for anchor tags. Default: false
@@ -140,6 +141,7 @@ Medium Editor, by default, will show only the buttons listed above to avoid a hu
 * __image__ (this simply converts selected text to an image tag)
 * __indent__ (moves the selected text up one level)
 * __outdent__ (moves the selected text down one level)
+* __removeFormat__ (clears inline style formatting, preserves blocks)
 
 
 ## Themes
@@ -149,8 +151,8 @@ Check out the Wiki page for a list of available themes: [https://github.com/davi
 ## API
 
 ### Core Methods
-* __.deactivate()__: disables the editor, removing all DOM elements and event handlers
-* __.activate()__: re-activates the editor if deactivated
+* __.destroy()__: tears down the editor if already setup, removing all DOM elements and event handlers
+* __.setup()__: rebuilds the editor if it has already been destroyed, recreating DOM elements and attaching event handlers
 * __.serialize()__: returns a JSON object with elements contents
 * __.execAction(action, opts)__: executes an built-in action via `document.execCommand`
 * __.createLink(opts)__: creates a link via the native `document.execCommand('createLink')` command

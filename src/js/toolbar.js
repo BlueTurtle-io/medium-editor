@@ -1,8 +1,8 @@
-/*global Util, Selection, console*/
+/*global Util, Selection*/
 
 var Toolbar;
 
-(function (window, document) {
+(function () {
     'use strict';
 
     Toolbar = function Toolbar(instance) {
@@ -103,7 +103,7 @@ var Toolbar;
             // throttledPositionToolbar is throttled because:
             // - It will be called when the browser is resizing, which can fire many times very quickly
             // - For some event (like resize) a slight lag in UI responsiveness is OK and provides performance benefits
-            this.throttledPositionToolbar = Util.throttle(function (event) {
+            this.throttledPositionToolbar = Util.throttle(function () {
                 if (this.base.isActive) {
                     this.positionToolbarIfShown();
                 }
@@ -111,6 +111,7 @@ var Toolbar;
         },
 
         attachEventHandlers: function () {
+            this.base.on(this.options.ownerDocument.documentElement, 'mousedown', this.handleDocumentMousedown.bind(this));
             // Handle mouseup on document for updating the selection in the toolbar
             this.base.on(this.options.ownerDocument.documentElement, 'mouseup', this.handleDocumentMouseup.bind(this));
 
@@ -136,16 +137,21 @@ var Toolbar;
             }.bind(this));
         },
 
-        handleWindowScroll: function (event) {
+        handleWindowScroll: function () {
             this.positionToolbarIfShown();
         },
 
-        handleWindowResize: function (event) {
+        handleWindowResize: function () {
             this.throttledPositionToolbar();
+        },
+
+        handleDocumentMousedown: function (event) {
+            this.lastMousedownTarget = event.target;
         },
 
         handleDocumentMouseup: function (event) {
             //console.log("Document mouseup");
+            this.lastMousedownTarget = null;
             // Do not trigger checkState when mouseup fires over the toolbar
             if (event &&
                     event.target &&
@@ -155,8 +161,9 @@ var Toolbar;
             this.checkState();
         },
 
-        handleEditableClick: function (event) {
+        handleEditableClick: function () {
             //console.log("Editable Click");
+
             // Delay the call to checkState to handle bug where selection is empty
             // immediately after clicking inside a pre-existing selection
             setTimeout(function () {
@@ -164,22 +171,39 @@ var Toolbar;
             }.bind(this), 0);
         },
 
-        handleEditableKeyup: function (event) {
+        handleEditableKeyup: function () {
             this.checkState();
         },
 
         handleEditableBlur: function (event) {
             //console.log("Editable Blur");
-            // Do not trigger checkState when bluring the editable area and clicking into the toolbar
-            if (event &&
-                    event.relatedTarget &&
-                    Util.isDescendant(this.getToolbarElement(), event.relatedTarget)) {
+            var isRelatedTargetOwnedByThisEditor = false,
+                relatedTarget = (event && event.relatedTarget) ? event.relatedTarget : this.lastMousedownTarget;
+            // Do not trigger checkState when blurring the editable area and clicking into the toolbar
+            if (Util.isDescendant(this.getToolbarElement(), relatedTarget)) {
                 return false;
+            }
+            if (relatedTarget) {
+                // Remove all selections before checking state. This is necessary to avoid issues with
+                // standardizeSelectionStart 'canceling' the blur event by moving the selection (in Chrome only).
+                // In Safari, when you click on a non-button element outside of the contenteditable, the selection
+                // is already nulled out by the browser at this point, but remained set in Chrome, Firefox, and IE11.
+                // This change will effectively normalize all browsers' behavior to be the same as Safari.
+                this.base.elements.forEach(function (el) {
+                    isRelatedTargetOwnedByThisEditor = isRelatedTargetOwnedByThisEditor || Util.isDescendant(el, relatedTarget) ||
+                        relatedTarget === el;
+                }, this);
+                // We only remove all the ranges if the user clicked outside the contenteditables managed by this
+                // medium-editor instance. Otherwise keep the ranges if they are set, we need the range to be present
+                // for various things done by the toolbar to work.
+                if (!isRelatedTargetOwnedByThisEditor) {
+                    this.options.contentWindow.getSelection().removeAllRanges();
+                }
             }
             this.checkState();
         },
 
-        handleBlur: function (event) {
+        handleBlur: function () {
             //console.log("External Interaction");
             // Delay the call to hideToolbar to handle bug with multiple editors on the page at once
             setTimeout(function () {
@@ -542,4 +566,4 @@ var Toolbar;
             }
         }
     };
-}(window, document));
+}());

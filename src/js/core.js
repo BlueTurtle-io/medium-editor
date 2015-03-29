@@ -1,5 +1,4 @@
-/*global module, console, define, FileReader,
- Util, ButtonsData, DefaultButton,
+/*global FileReader, Util, ButtonsData, DefaultButton,
  PasteHandler, Selection, AnchorExtension,
  Toolbar, AnchorPreview, Events, Placeholders */
 
@@ -24,7 +23,7 @@ function MediumEditor(elements, options) {
         }
     }
 
-    function handleTabKeydown(event, element) {
+    function handleTabKeydown(event) {
         // Override tab only for pre nodes
         var node = Util.getSelectionStart(this.options.ownerDocument),
             tag = node && node.tagName.toLowerCase();
@@ -47,18 +46,19 @@ function MediumEditor(elements, options) {
         }
     }
 
-    function handleBlockDeleteKeydowns(event, element) {
+    function handleBlockDeleteKeydowns(event) {
         var range, sel, p, node = Util.getSelectionStart(this.options.ownerDocument),
             tagName = node.tagName.toLowerCase(),
             isEmpty = /^(\s+|<br\/?>)?$/i,
             isHeader = /h\d/i;
 
-        if ((event.which === Util.keyCode.BACKSPACE || event.which === Util.keyCode.ENTER)
-                && node.previousElementSibling
+        if ((event.which === Util.keyCode.BACKSPACE || event.which === Util.keyCode.ENTER) &&
+                // has a preceeding sibling
+                node.previousElementSibling &&
                 // in a header
-                && isHeader.test(tagName)
+                isHeader.test(tagName) &&
                 // at the very end of the block
-                && Selection.getCaretOffsets(node).left === 0) {
+                Selection.getCaretOffsets(node).left === 0) {
             if (event.which === Util.keyCode.BACKSPACE && isEmpty.test(node.previousElementSibling.innerHTML)) {
                 // backspacing the begining of a header into an empty previous element will
                 // change the tagName of the current node to prevent one
@@ -73,23 +73,24 @@ function MediumEditor(elements, options) {
                 node.previousElementSibling.parentNode.insertBefore(p, node);
                 event.preventDefault();
             }
-        } else if (event.which === Util.keyCode.DELETE
-                    && node.nextElementSibling
-                    && node.previousElementSibling
+        } else if (event.which === Util.keyCode.DELETE &&
+                    // between two sibling elements
+                    node.nextElementSibling &&
+                    node.previousElementSibling &&
                     // not in a header
-                    && !isHeader.test(tagName)
+                    !isHeader.test(tagName) &&
                     // in an empty tag
-                    && isEmpty.test(node.innerHTML)
+                    isEmpty.test(node.innerHTML) &&
                     // when the next tag *is* a header
-                    && isHeader.test(node.nextElementSibling.tagName)) {
+                    isHeader.test(node.nextElementSibling.tagName)) {
             // hitting delete in an empty element preceding a header, ex:
             //  <p>[CURSOR]</p><h1>Header</h1>
             // Will cause the h1 to become a paragraph.
             // Instead, delete the paragraph node and move the cursor to the begining of the h1
 
             // remove node and move cursor to start of header
-            range = document.createRange();
-            sel = this.options.contentWindow.getSelection();
+            range = this.options.ownerDocument.createRange();
+            sel = this.options.ownerDocument.getSelection();
 
             range.setStart(node.nextElementSibling, 0);
             range.collapse(true);
@@ -100,10 +101,45 @@ function MediumEditor(elements, options) {
             node.previousElementSibling.parentNode.removeChild(node);
 
             event.preventDefault();
+        } else if (event.which === Util.keyCode.BACKSPACE &&
+                tagName === 'li' &&
+                // hitting backspace inside an empty li
+                isEmpty.test(node.innerHTML) &&
+                // is first element (no preceeding siblings)
+                !node.previousElementSibling &&
+                // parent also does not have a sibling
+                !node.parentElement.previousElementSibling &&
+                // is not the only li in a list
+                node.nextElementSibling.tagName.toLowerCase() === 'li') {
+            // backspacing in an empty first list element in the first list (with more elements) ex:
+            //  <ul><li>[CURSOR]</li><li>List Item 2</li></ul>
+            // will remove the first <li> but add some extra element before (varies based on browser)
+            // Instead, this will:
+            // 1) remove the list element
+            // 2) create a paragraph before the list
+            // 3) move the cursor into the paragraph
+
+            // create a paragraph before the list
+            p = this.options.ownerDocument.createElement('p');
+            p.innerHTML = '<br>';
+            node.parentElement.parentElement.insertBefore(p, node.parentElement);
+
+            // move the cursor into the new paragraph
+            range = this.options.ownerDocument.createRange();
+            sel = this.options.ownerDocument.getSelection();
+            range.setStart(p, 0);
+            range.collapse(true);
+            sel.removeAllRanges();
+            sel.addRange(range);
+
+            // remove the list element
+            node.parentElement.removeChild(node);
+
+            event.preventDefault();
         }
     }
 
-    function handleDrag(event, element) {
+    function handleDrag(event) {
         var className = 'medium-editor-dragover';
         event.preventDefault();
         event.dataTransfer.dropEffect = 'copy';
@@ -115,7 +151,7 @@ function MediumEditor(elements, options) {
         }
     }
 
-    function handleDrop(event, element) {
+    function handleDrop(event) {
         var className = 'medium-editor-dragover',
             files;
         event.preventDefault();
@@ -135,13 +171,13 @@ function MediumEditor(elements, options) {
                     Util.insertHTMLCommand(this.options.ownerDocument, '<img class="medium-image-loading" id="' + id + '" />');
 
                     fileReader.onload = function () {
-                        var img = document.getElementById(id);
+                        var img = this.options.ownerDocument.getElementById(id);
                         if (img) {
                             img.removeAttribute('id');
                             img.removeAttribute('class');
                             img.src = fileReader.result;
                         }
-                    };
+                    }.bind(this);
                 }
             }.bind(this));
         }
@@ -359,6 +395,9 @@ function MediumEditor(elements, options) {
         AnchorPreview: AnchorPreview
     };
 
+    MediumEditor.util = Util;
+    MediumEditor.selection = Selection;
+
     MediumEditor.prototype = {
         defaults: {
             allowMultiParagraphSelection: true,
@@ -421,8 +460,11 @@ function MediumEditor(elements, options) {
             return this.setup();
         },
 
-        // NOT DOCUMENTED - internal helper method exposed for backwards compatability
         setup: function () {
+            if (this.isActive) {
+                return;
+            }
+
             this.events = new Events(this);
             this.isActive = true;
 
@@ -436,6 +478,34 @@ function MediumEditor(elements, options) {
             if (!this.options.disablePlaceholders) {
                 this.placeholders = new Placeholders(this);
             }
+        },
+
+        destroy: function () {
+            if (!this.isActive) {
+                return;
+            }
+
+            var i;
+
+            this.isActive = false;
+
+            if (this.toolbar !== undefined) {
+                this.toolbar.deactivate();
+                delete this.toolbar;
+            }
+
+            for (i = 0; i < this.elements.length; i += 1) {
+                this.elements[i].removeAttribute('contentEditable');
+                this.elements[i].removeAttribute('data-medium-element');
+            }
+
+            this.commands.forEach(function (extension) {
+                if (typeof extension.deactivate === 'function') {
+                    extension.deactivate();
+                }
+            }.bind(this));
+
+            this.events.detachAllDOMEvents();
         },
 
         on: function (target, event, listener, useCapture) {
@@ -570,6 +640,11 @@ function MediumEditor(elements, options) {
                 this.restoreSelection();
             } else {
                 result = execActionInternal.call(this, action, opts);
+            }
+
+            // do some DOM clean-up for known browser issues after the action
+            if (action === 'insertunorderedlist' || action === 'insertorderedlist') {
+                Util.cleanListDOM(this.getSelectedParentElement());
             }
 
             this.checkSelection();
@@ -730,46 +805,22 @@ function MediumEditor(elements, options) {
             }
         },
 
+        // alias for setup - keeping for backwards compatability
         activate: function () {
-            if (this.isActive) {
-                return;
-            }
-
-            this.setup();
+            Util.deprecatedMethod.call(this, 'activate', 'setup', arguments);
         },
 
+        // alias for destory - keeping for backwards compatability
         deactivate: function () {
-            var i;
-            if (!this.isActive) {
-                return;
-            }
-            this.isActive = false;
-
-            if (this.toolbar !== undefined) {
-                this.toolbar.deactivate();
-                delete this.toolbar;
-            }
-
-            for (i = 0; i < this.elements.length; i += 1) {
-                this.elements[i].removeAttribute('contentEditable');
-                this.elements[i].removeAttribute('data-medium-element');
-            }
-
-            this.commands.forEach(function (extension) {
-                if (typeof extension.deactivate === 'function') {
-                    extension.deactivate();
-                }
-            }.bind(this));
-
-            this.events.detachAllDOMEvents();
+            Util.deprecatedMethod.call(this, 'deactivate', 'destroy', arguments);
         },
 
         cleanPaste: function (text) {
             this.pasteHandler.cleanPaste(text);
         },
 
-        pasteHTML: function (html) {
-            this.pasteHandler.pasteHTML(html);
+        pasteHTML: function (html, options) {
+            this.pasteHandler.pasteHTML(html, options);
         }
     };
 }());

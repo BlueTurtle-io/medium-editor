@@ -1,7 +1,7 @@
-/*global Util, Selection, console*/
+/*global Util, Selection*/
 var PasteHandler;
 
-(function (window, document) {
+(function () {
     'use strict';
     /*jslint regexp: true*/
     /*
@@ -75,9 +75,9 @@ var PasteHandler;
                 dataFormatPlain = 'Text';
             }
 
-            if (event.clipboardData
-                    && event.clipboardData.getData
-                    && !event.defaultPrevented) {
+            if (event.clipboardData &&
+                    event.clipboardData.getData &&
+                    !event.defaultPrevented) {
                 event.preventDefault();
 
                 if (this.options.cleanPastedHTML && event.clipboardData.getData(dataFormatHTML)) {
@@ -149,7 +149,12 @@ var PasteHandler;
             }
         },
 
-        pasteHTML: function (html) {
+        pasteHTML: function (html, options) {
+            options = Util.defaults(options, {
+                cleanAttrs: ['class', 'style', 'dir'],
+                cleanTags: ['meta']
+            });
+
             var elList, workEl, i, fragmentBody, pasteBlock = this.options.ownerDocument.createDocumentFragment();
 
             pasteBlock.appendChild(this.options.ownerDocument.createElement('body'));
@@ -160,28 +165,26 @@ var PasteHandler;
             this.cleanupSpans(fragmentBody);
 
             elList = fragmentBody.querySelectorAll('*');
+
             for (i = 0; i < elList.length; i += 1) {
                 workEl = elList[i];
-
-                // delete ugly attributes
-                workEl.removeAttribute('class');
-                workEl.removeAttribute('style');
-                workEl.removeAttribute('dir');
-
-                if (workEl.tagName.toLowerCase() === 'meta') {
-                    workEl.parentNode.removeChild(workEl);
-                }
+                Util.cleanupAttrs(workEl, options.cleanAttrs);
+                Util.cleanupTags(workEl, options.cleanTags);
             }
+
             Util.insertHTMLCommand(this.options.ownerDocument, fragmentBody.innerHTML.replace(/&nbsp;/g, ' '));
         },
+
         isCommonBlock: function (el) {
             return (el && (el.tagName.toLowerCase() === 'p' || el.tagName.toLowerCase() === 'div'));
         },
+
         filterCommonBlocks: function (el) {
             if (/^\s*$/.test(el.textContent) && el.parentNode) {
                 el.parentNode.removeChild(el);
             }
         },
+
         filterLineBreak: function (el) {
 
             if (this.isCommonBlock(el.previousElementSibling)) {
@@ -247,4 +250,4 @@ var PasteHandler;
             }
         }
     };
-}(window, document));
+}());

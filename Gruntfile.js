@@ -22,7 +22,8 @@ module.exports = function (grunt) {
             'src/js/extension-anchor-preview.js',
             'src/js/toolbar.js',
             'src/js/placeholders.js',
-            'src/js/core.js'
+            'src/js/core.js',
+            'src/js/version.js'
         ],
         browsers = [ {
             browserName: "internet explorer",
@@ -62,21 +63,19 @@ module.exports = function (grunt) {
         }
     };
 
-    gruntConfig.jslint = {
-        client: {
-            exclude: ['src/js/polyfills.js'],
+    // TODO: build check with debug and devel false
+    gruntConfig.jshint = {
+        options: {
+            ignores: ['src/js/polyfills.js'],
+            jshintrc: true,
+            reporter: require('jshint-stylish')
+        },
+        all: {
             src: [
                 'src/js/**/*.js',
                 'spec/*.spec.js',
                 'Gruntfile.js'
-            ],
-            directives: {
-                browser: true,
-                unparam: true,
-                todo: true,
-                regexp: true,
-                debug: true
-            }
+            ]
         }
     };
 
@@ -106,11 +105,6 @@ module.exports = function (grunt) {
                         type: 'lcov',
                         options: {
                             dir: 'reports/jasmine/lcov'
-                        }
-                    }, {
-                        type: 'html',
-                        options: {
-                            dir: 'coverage'
                         }
                     }]
                 },
@@ -274,7 +268,7 @@ module.exports = function (grunt) {
 
     gruntConfig.bump = {
         options: {
-            files: ['bower.json', 'package.json'],
+            files: ['bower.json', 'package.json','src/js/version.js'],
             updateConfigs: [],
             commit: false,
             createTag: false,
@@ -292,10 +286,15 @@ module.exports = function (grunt) {
         ]
     });
 
-    grunt.registerTask('test', ['jslint', 'concat', 'jasmine:suite', 'csslint']);
-    grunt.registerTask('travis', ['connect', 'jslint', 'jasmine:suite', 'csslint', 'saucelabs-jasmine', 'coveralls']);
+    if (parseInt(process.env.TRAVIS_PULL_REQUEST, 10) > 0) {
+        grunt.registerTask('travis', ['jshint', 'jasmine:suite', 'csslint', 'coveralls']);
+    } else {
+        grunt.registerTask('travis', ['connect', 'jshint', 'jasmine:suite', 'csslint', 'saucelabs-jasmine', 'coveralls']);
+    }
+
+    grunt.registerTask('test', ['jshint', 'concat', 'jasmine:suite', 'csslint']);
     grunt.registerTask('sauce', ['connect', 'saucelabs-jasmine']);
-    grunt.registerTask('js', ['jslint', 'concat', 'jasmine:suite', 'uglify']);
+    grunt.registerTask('js', ['jshint', 'concat', 'jasmine:suite', 'uglify']);
     grunt.registerTask('css', ['sass', 'autoprefixer', 'cssmin', 'csslint']);
     grunt.registerTask('default', ['js', 'css']);
 

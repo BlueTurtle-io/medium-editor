@@ -1,9 +1,7 @@
-/*global console */
-
 var DefaultButton,
     ButtonsData;
 
-(function (window, document) {
+(function () {
     'use strict';
 
     ButtonsData = {
@@ -219,6 +217,15 @@ var DefaultButton,
                 return [options.secondHeader];
             },
             contentDefault: '<b>H2</b>'
+        },
+        // Known inline elements that are not removed, or not removed consistantly across browsers:
+        // <span>, <label>, <br>
+        'removeFormat': {
+            name: 'removeFormat',
+            aria: 'remove formatting',
+            action: 'removeFormat',
+            contentDefault: '<b>X</b>',
+            contentFA: '<i class="fa fa-eraser"></i>'
         }
     };
 
@@ -344,4 +351,4 @@ var DefaultButton,
             return isMatch;
         }
     };
-}(window, document));
+}());

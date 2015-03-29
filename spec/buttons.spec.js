@@ -1,7 +1,6 @@
 /*global MediumEditor, describe, it, expect, spyOn,
-         afterEach, beforeEach, selectElementContents,
-         jasmine, fireEvent, tearDown, console,
-         selectElementContentsAndFire, xit, isOldIE, isIE */
+         afterEach, beforeEach, jasmine, fireEvent, tearDown,
+         selectElementContentsAndFire, isOldIE, isIE */
 
 describe('Buttons TestCase', function () {
     'use strict';
@@ -654,6 +653,36 @@ describe('Buttons TestCase', function () {
             expect(centerButton.classList.contains('medium-editor-button-active')).toBe(false);
             expect(fullButton.classList.contains('medium-editor-button-active')).toBe(true);
         });
+    });
+
+    describe('Remove Formatting', function () {
+
+        it('should unwrap basic things', function () {
+            var editor = new MediumEditor('.editor', {
+                    buttons: ['removeFormat']
+                }),
+                button = editor.toolbar.getToolbarElement().querySelector('[data-action="removeFormat"]');
+
+            expect(button).toBeTruthy();
+
+            this.el.innerHTML = "<p>foo<b>bar</b><i>baz</i><strong>bam</strong></p>";
+            selectElementContentsAndFire(editor.elements[0].querySelector('p'));
+            fireEvent(button, "click");
+            expect(this.el.innerHTML).toBe("<p>foobarbazbam</p>");
+
+            this.el.innerHTML = "<div><p><b>foo</b></p><p><i>bar</i></p><ul><li>on<b>e</b></li></ul></div>";
+            selectElementContentsAndFire(editor.elements[0].querySelector('div'));
+            fireEvent(button, "click");
+            expect(this.el.innerHTML).toBe("<div><p>foo</p><p>bar</p><ul><li>one</li></ul></div>");
+
+            // TODO: IE does not unwrap something like <p><span style='color:red'>bar</span></p>
+            this.el.innerHTML = "<div><h2>b<i>a</i>r</h2><p><em><strong><u><sub><sup>foo</sup></sub></u></strong></em></p><pre>foo<i>bar</i>baz</pre></div>";
+            selectElementContentsAndFire(editor.elements[0].querySelector('div'));
+            fireEvent(button, "click");
+            expect(this.el.innerHTML).toBe("<div><h2>bar</h2><p>foo</p><pre>foobarbaz</pre></div>");
+
+        });
+
     });
 
     describe('Header', function () {

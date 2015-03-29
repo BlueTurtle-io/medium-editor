@@ -1,6 +1,5 @@
-/*global MediumEditor, describe, it, expect, spyOn, jasmine, fireEvent,
-         afterEach, beforeEach, selectElementContents, runs, waitsFor,
-         tearDown */
+/*global MediumEditor, describe, it, expect, jasmine,
+    afterEach, beforeEach, tearDown */
 
 describe('Delay TestCase', function () {
     'use strict';
@@ -35,7 +34,7 @@ describe('Delay TestCase', function () {
         editor = new MediumEditor('.editor', {delay: 1});
         spy = jasmine.createSpy('spy');
 
-        editor.deactivate();
+        editor.destroy();
         editor.delay(spy);
         jasmine.clock().tick(100);
         expect(spy).not.toHaveBeenCalled();

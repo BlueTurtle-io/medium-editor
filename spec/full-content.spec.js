@@ -1,7 +1,5 @@
-/*global MediumEditor, describe, it, expect, spyOn,
-         afterEach, beforeEach, selectElementContents,
-         jasmine, fireEvent, tearDown, console,
-         selectElementContentsAndFire, xit */
+/*global MediumEditor, describe, it, expect, afterEach,
+    beforeEach, tearDown, selectElementContentsAndFire */
 
 describe('Full Content Action TestCase', function () {
     'use strict';
@@ -16,7 +14,7 @@ describe('Full Content Action TestCase', function () {
 
     afterEach(function () {
         if (this.editor) {
-            this.editor.deactivate();
+            this.editor.destroy();
             delete this.editor;
         }
         tearDown(this.el);
@@ -25,7 +23,7 @@ describe('Full Content Action TestCase', function () {
     describe('All editable contents', function () {
         afterEach(function () {
             if (this.editor) {
-                this.editor.deactivate();
+                this.editor.destroy();
                 delete this.editor;
             }
         });
@@ -50,7 +48,7 @@ describe('Full Content Action TestCase', function () {
     describe('Selection', function () {
         afterEach(function () {
             if (this.editor) {
-                this.editor.deactivate();
+                this.editor.destroy();
                 delete this.editor;
             }
         });

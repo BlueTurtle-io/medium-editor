@@ -2,7 +2,7 @@
 
 var Util;
 
-(function (window, document) {
+(function (window) {
     'use strict';
 
     function copyInto(dest, source, overwrite) {
@@ -96,9 +96,7 @@ var Util;
             return !!(obj && obj.nodeType === 1);
         },
 
-        now: function now() {
-            return Date.now() || new Date().getTime();
-        },
+        now: Date.now,
 
         // https://github.com/jashkenas/underscore
         throttle: function (func, wait) {
@@ -332,6 +330,54 @@ var Util;
                 }
             }
             return false;
+        },
+
+        cleanListDOM: function (element) {
+            if (element.tagName.toLowerCase() === 'li') {
+                var list = element.parentElement;
+                if (list.parentElement.tagName.toLowerCase() === 'p') { // yes we need to clean up
+                    this.unwrapElement(list.parentElement);
+                }
+            }
+        },
+
+        unwrapElement: function (element) {
+            var parent = element.parentNode,
+                current = element.firstChild,
+                next;
+            do {
+                next = current.nextSibling;
+                parent.insertBefore(current, element);
+                current = next;
+            } while (current);
+            parent.removeChild(element);
+        },
+
+        deprecatedMethod: function (oldName, newName, args) {
+            // Thanks IE9, you're the best
+            if (window.console !== undefined) {
+                console.warn(oldName +
+                    ' is deprecated and will be removed, please use ' +
+                    newName +
+                    ' instead');
+            }
+            if (typeof this[newName] === 'function') {
+                this[newName].apply(this, args);
+            }
+        },
+
+        cleanupAttrs: function (el, attrs) {
+            attrs.forEach(function (attr) {
+                el.removeAttribute(attr);
+            });
+        },
+
+        cleanupTags: function (el, tags) {
+            tags.forEach(function (tag) {
+                if (el.tagName.toLowerCase() === tag) {
+                    el.parentNode.removeChild(el);
+                }
+            });
         }
     };
-}(window, document));
+}(window));

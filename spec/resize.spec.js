@@ -1,7 +1,6 @@
 /*global MediumEditor, describe, it, expect,
          afterEach, beforeEach, fireEvent, spyOn,
-         selectElementContentsAndFire, jasmine, tearDown,
-         console, xit*/
+         selectElementContentsAndFire, jasmine, tearDown */
 
 describe('Resize TestCase', function () {
     'use strict';
@@ -28,7 +27,7 @@ describe('Resize TestCase', function () {
         fireEvent(window, 'resize');
         jasmine.clock().tick(1);
         expect(editor.toolbar.setToolbarPosition).toHaveBeenCalled();
-        editor.deactivate();
+        editor.destroy();
     });
 
     it('should not call setToolbarPosition when toolbar is not visible', function () {

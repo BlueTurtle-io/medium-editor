@@ -1,7 +1,7 @@
 /*global MediumEditor, describe, it, expect, spyOn,
-         afterEach, beforeEach, selectElementContents, runs,
-         fireEvent, waitsFor, tearDown, xit, jasmine,
-         selectElementContentsAndFire, console, Toolbar*/
+    afterEach, beforeEach, selectElementContents,
+    fireEvent, tearDown, jasmine, selectElementContentsAndFire,
+    placeCursorInsideElement, Toolbar */
 
 describe('Toolbar TestCase', function () {
     'use strict';
@@ -128,6 +128,25 @@ describe('Toolbar TestCase', function () {
             jasmine.clock().uninstall();
         });
 
+        it('should let the user click outside of the selected area to leave', function () {
+            this.el.innerHTML = 'This is my text<span>and this is some other text</span>';
+            var editor = new MediumEditor('.editor', {
+                staticToolbar: true,
+                standardizeSelectionStart: true,
+                updateOnEmptySelection: true
+            });
+
+            placeCursorInsideElement(this.el.firstChild, 'This is my text'.length);
+            fireEvent(document.documentElement, 'mousedown', {
+                target: document.body
+            });
+            fireEvent(this.el, 'blur', {
+                relatedTarget: document.createElement('div')
+            });
+            expect(editor.toolbar.getToolbarElement().classList.contains('medium-editor-toolbar-active')).toBe(false);
+            expect(window.getSelection().anchorNode).toBe(null);
+        });
+
         it('should not throw an error when check selection is called when there is an empty selection', function () {
             this.el.innerHTML = '<b>lorem ipsum</b>';
             var editor = new MediumEditor('.editor', {
@@ -209,7 +228,7 @@ describe('Toolbar TestCase', function () {
             var editor = new MediumEditor('.editor');
             expect(this.el.addEventListener).toHaveBeenCalled();
             spyOn(this.el, 'removeEventListener');
-            editor.deactivate();
+            editor.destroy();
             expect(this.el.removeEventListener).toHaveBeenCalled();
         });
     });
