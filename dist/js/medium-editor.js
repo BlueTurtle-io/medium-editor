@@ -2365,6 +2365,7 @@ var Toolbar;
         },
 
         handleDocumentMouseup: function (event) {
+            //console.log("Document mouseup");
             this.lastMousedownTarget = null;
             // Do not trigger checkState when mouseup fires over the toolbar
             if (event &&
@@ -2376,6 +2377,8 @@ var Toolbar;
         },
 
         handleEditableClick: function () {
+            //console.log("Editable Click");
+
             // Delay the call to checkState to handle bug where selection is empty
             // immediately after clicking inside a pre-existing selection
             setTimeout(function () {
@@ -2388,6 +2391,7 @@ var Toolbar;
         },
 
         handleEditableBlur: function (event) {
+            //console.log("Editable Blur");
             var isRelatedTargetOwnedByThisEditor = false,
                 relatedTarget = (event && event.relatedTarget) ? event.relatedTarget : this.lastMousedownTarget;
             // Do not trigger checkState when blurring the editable area and clicking into the toolbar
@@ -2415,6 +2419,7 @@ var Toolbar;
         },
 
         handleBlur: function () {
+            //console.log("External Interaction");
             // Delay the call to hideToolbar to handle bug with multiple editors on the page at once
             setTimeout(function () {
                 this.hideToolbar();
@@ -2560,6 +2565,7 @@ var Toolbar;
                 if ((!this.options.updateOnEmptySelection && newSelection.toString().trim() === '') ||
                         (this.options.allowMultiParagraphSelection === false && this.multipleBlockElementsSelected()) ||
                         Selection.selectionInContentEditableFalse(this.options.contentWindow)) {
+                    //console.log("TOP HALF OF CHECKSTATE");
                     if (!this.options.staticToolbar) {
                         this.hideToolbar();
                     } else {
@@ -2568,6 +2574,8 @@ var Toolbar;
 
                 } else {
                     selectionElement = Selection.getSelectionElement(this.options.contentWindow);
+                    //console.log("Selection Element");
+                    //console.log(selectionElement);
                     if (!selectionElement || selectionElement.getAttribute('data-disable-toolbar')) {
                         if (!this.options.staticToolbar) {
                             this.hideToolbar();

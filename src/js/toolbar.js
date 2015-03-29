@@ -362,9 +362,9 @@ var Toolbar;
                     //console.log("Selection Element");
                     //console.log(selectionElement);
                     if (!selectionElement || selectionElement.getAttribute('data-disable-toolbar')) {
-                        //if (!this.options.staticToolbar) {
-                        this.hideToolbar();
-                        //}
+                        if (!this.options.staticToolbar) {
+                            this.hideToolbar();
+                        }
                     } else {
                         this.checkSelectionElement(newSelection, selectionElement);
                     }
